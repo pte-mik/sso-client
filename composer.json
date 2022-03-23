@@ -1,0 +1,17 @@
+{
+    "name": "pte-mik/sso",
+    "description": "PTE MIK ID SSO CLIENT",
+    "keywords": [],
+    "license" : "MIT",
+    "authors" : [
+        {
+            "name": "Gergely Laborci",
+            "email": "gergely@laborci.hu"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PTE\\MIK\\SSO\\": "src/"
+        }
+    }
+}
