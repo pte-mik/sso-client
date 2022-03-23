@@ -9,7 +9,7 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-abstract class AbstractSSOClient {
+abstract class AbstractSSOClient implements SSOClientInterface {
 
 	const RETURN_URL_KEY = "return-url";
 	const AUTH_REQUEST_URL = "/auth-request";
