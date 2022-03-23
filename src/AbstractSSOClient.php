@@ -14,8 +14,9 @@ abstract class AbstractSSOClient implements SSOClientInterface {
 	const RETURN_URL_KEY = "return-url";
 	const AUTH_REQUEST_URL = "/auth-request";
 	const LOGOUT_URL = "/logout";
+	const GROUPS_KEY = "groups";
 
-	abstract protected function userFactory(SSOUser $ssoUser):AuthenticableInterface;
+	abstract protected function userFactory(SSOUser $ssoUser): AuthenticableInterface;
 
 	public function __construct(
 		protected SessionAuthenticator $sessionAuthenticator,
@@ -28,21 +29,22 @@ abstract class AbstractSSOClient implements SSOClientInterface {
 		$this->authUrl = trim($this->authUrl, "/");
 	}
 
-	#[NoReturn] public function authRedirect(string $returnUrl): void {
-		$response = new RedirectResponse($this->authUrl . self::AUTH_REQUEST_URL . '?token=' . $this->createToken($returnUrl));
+	#[NoReturn] public function authRedirect(string $returnUrl, string|array|null $group = null): void {
+		if(is_string($group)) $group = [$group];
+		$response = new RedirectResponse($this->authUrl . self::AUTH_REQUEST_URL . '?token=' . $this->createToken([self::RETURN_URL_KEY => $returnUrl, self::GROUPS_KEY => $group]));
 		$response->send();
 		die();
 	}
 
-	protected function createToken(string $returnUrl): string {
+	protected function createToken(array $claims = []): string {
 		$jwtConfig = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($this->secret));
 
-		return $jwtConfig->builder()
-		                 ->issuedBy($this->appKey)
-		                 ->withClaim(self::RETURN_URL_KEY, $returnUrl)
-		                 ->expiresAt(\DateTimeImmutable::createFromFormat('U', time() + $this->requestTimeout))
-		                 ->getToken($jwtConfig->signer(), $jwtConfig->signingKey())
-		                 ->toString()
+		$builder = $jwtConfig->builder()
+		                     ->issuedBy($this->appKey)
+		                     ->expiresAt(\DateTimeImmutable::createFromFormat('U', time() + $this->requestTimeout));
+		foreach ($claims as $key => $value) $builder->withClaim($key, $value);
+		return $builder->getToken($jwtConfig->signer(), $jwtConfig->signingKey())
+		               ->toString()
 		;
 	}
 
@@ -59,7 +61,7 @@ abstract class AbstractSSOClient implements SSOClientInterface {
 	}
 
 	#[NoReturn] public function logout(string $returnUrl): void {
-		$response = new RedirectResponse($this->authUrl . self::LOGOUT_URL . '?token=' . $this->createToken($returnUrl));
+		$response = new RedirectResponse($this->authUrl . self::LOGOUT_URL . '?token=' . $this->createToken([self::RETURN_URL_KEY => $returnUrl]));
 		$this->sessionAuthenticator->logout($response);
 		$response->send();
 		die();

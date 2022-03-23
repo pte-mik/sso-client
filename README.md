@@ -50,9 +50,11 @@ class SSOClient extends AbstractSSOClient {
 
 ### Send Login Request
 
+You can initiate the login with the `authRedirect` method. You must pass a `returnUrl`, and you can optionally specify one or more groups to which the logged in user must belong. If you specify multiple groups, at least one of them must be included.
+
 ```php
 $returnUrl = $this->request->getSchemeAndHttpHost() . '/auth';
-$SSOClient->authRedirect($returnUrl);
+$SSOClient->authRedirect($returnUrl, ['admin']);
 ```
 
 ### Auth responder
